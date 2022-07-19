@@ -59,6 +59,32 @@ def joinor(arr, punctuation = ', ', conjunction = "or")
   end
 end
 
+def player_prompt_first_move
+  first_move = ""
+  loop do
+    prompt "Please indicate if you would like to play first. Enter 'y' if yes and 'n' if you will let the Computer decide."
+    first_move = gets.chomp.downcase
+    break if first_move.start_with?('y') || first_move.start_with?('n')
+    prompt "Incorrect response. Please enter 'y' or 'n'."
+  end
+  first_move
+end
+
+def player_first_move?
+  answer = player_prompt_first_move
+  computer_first_move_selection = [true, false].sample
+  
+  if answer.start_with?('y')
+    true
+  else
+    if computer_first_move_selection
+      true
+    else
+      false
+    end
+  end
+end
+
 def display_score(plyr_scr, comp_scr)
   prompt "The current score is Player: #{plyr_scr}, Computer: #{comp_scr}."
 end
@@ -90,7 +116,6 @@ def offensive_square(line, board)
   end
 end
 
-
 def computer_places_piece!(brd)
   square = nil
   WINNING_LINES.each do |line|
@@ -105,9 +130,9 @@ def computer_places_piece!(brd)
     end
   end
 
-  # if !square
-  #   # pick square 5
-  # end
+  if !square
+    square = 5
+  end
 
   if !square
     square = empty_squares(brd).sample
@@ -151,7 +176,20 @@ end
 loop do
   board = initialize_board
   display_board(board)
+  
+  first_mover = player_first_move? ? "Player" : "Computer"
 
+  if first_mover == "Computer"
+    loop do # THERE IS AN ISSUE HERE. IT SKIPS THE SECOND TIME THE COMPUTER CHOOSES FIRST
+      computer_places_piece!(board)
+      break if someone_won?(board) || board_full?(board)
+      ß
+      display_board(board)
+
+      player_places_piece!(board)
+      break if someone_won?(board) || board_full?(board)
+    end
+  else
     loop do
       display_board(board)
 
@@ -161,25 +199,26 @@ loop do
       computer_places_piece!(board)
       break if someone_won?(board) || board_full?(board)
     end
+  end
 
-    display_board(board)
-  
+  display_board(board)
 
-    if someone_won?(board)
-      if detect_winner(board) == 'Player'
-        player_score += 1
-      else 
-        computer_score += 1
-      end
-    else
-      prompt "It's a tie!"
+
+  if someone_won?(board)
+    if detect_winner(board) == 'Player'
+      player_score += 1
+    else 
+      computer_score += 1
     end
+  else
+    prompt "It's a tie!"
+  end
 
-    display_score(player_score, computer_score)
+  display_score(player_score, computer_score)
 
-    if five_wins?(player_score, computer_score)
-      prompt "#{detect_five_wins(player_score, computer_score)} won 5 games!"
-    end
+  if five_wins?(player_score, computer_score)
+    prompt "#{detect_five_wins(player_score, computer_score)} won 5 games!"
+  end
 
   prompt "Play again? (y or n)"
   answer = gets.chomp
