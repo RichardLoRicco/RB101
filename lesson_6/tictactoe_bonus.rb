@@ -77,11 +77,7 @@ def player_first_move?
   if answer.start_with?('y')
     true
   else
-    if computer_first_move_selection
-      true
-    else
-      false
-    end
+    computer_first_move_selection
   end
 end
 
@@ -131,14 +127,29 @@ def computer_places_piece!(brd)
   end
 
   if !square
-    square = 5
+    square = 5 # check if empty first?
   end
 
   if !square
     square = empty_squares(brd).sample
   end
-
   brd[square] = COMPUTER_MARKER
+end
+
+def place_piece!(brd, plr)
+  if plr == "Player"
+    player_places_piece!(brd)
+  else
+    computer_places_piece!(brd)
+  end
+end
+
+def alternate_player(plr)
+  if plr == "Player"
+    "Computer"
+  else
+    "Player"
+  end
 end
 
 def board_full?(brd)
@@ -179,27 +190,14 @@ loop do
   
   first_mover = player_first_move? ? "Player" : "Computer"
 
-  if first_mover == "Computer"
-    loop do # THERE IS AN ISSUE HERE. IT SKIPS THE SECOND TIME THE COMPUTER CHOOSES FIRST
-      computer_places_piece!(board)
-      break if someone_won?(board) || board_full?(board)
-      ß
-      display_board(board)
-
-      player_places_piece!(board)
-      break if someone_won?(board) || board_full?(board)
-    end
-  else
-    loop do
-      display_board(board)
-
-      player_places_piece!(board)
-      break if someone_won?(board) || board_full?(board)
-
-      computer_places_piece!(board)
-      break if someone_won?(board) || board_full?(board)
-    end
+  current_player = first_mover
+  loop do
+    display_board(board)
+    place_piece!(board, current_player)
+    current_player = alternate_player(current_player)
+    break if someone_won?(board) || board_full?(board)
   end
+  
 
   display_board(board)
 
