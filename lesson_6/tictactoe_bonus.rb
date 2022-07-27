@@ -6,6 +6,7 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
+GAMES_TO_WIN = 5
 
 player_score = 0
 computer_score = 0
@@ -15,6 +16,7 @@ def prompt(msg)
 end
 
 # rubocop: disable Metrics/AbcSize
+# rubocop: disable Metrics/MethodLength
 def display_board(brd)
   system 'clear'
   puts "First to 5 games wins."
@@ -34,6 +36,7 @@ def display_board(brd)
   puts ""
 end
 # rubocop: enable Metrics/AbcSize
+# rubocop: enable Metrics/MethodLength
 
 def initialize_board
   new_board = {}
@@ -55,14 +58,15 @@ def joinor(arr, punctuation = ', ', conjunction = "or")
     arr.join(" #{conjunction} ")
   else
     arr[-1] = "#{conjunction} #{arr.last}"
-    arr.join("#{punctuation}")
+    arr.join(punctuation.to_s)
   end
 end
 
 def player_prompt_first_move
   first_move = ""
   loop do
-    prompt "Please indicate if you would like to play first. Enter 'y' if yes and 'n' if you will let the Computer decide."
+    prompt "Please indicate if you would like to play first."
+    prompt "Enter 'y' if yes and 'n' if you will let the Computer decide."
     first_move = gets.chomp.downcase
     break if first_move.start_with?('y') || first_move.start_with?('n')
     prompt "Incorrect response. Please enter 'y' or 'n'."
@@ -73,7 +77,7 @@ end
 def player_first_move?
   answer = player_prompt_first_move
   computer_first_move_selection = [true, false].sample
-  
+
   if answer.start_with?('y')
     true
   else
@@ -96,9 +100,11 @@ def player_places_piece!(brd)
   brd[square] = PLAYER_MARKER
 end
 
+# rubocop: disable Style/EmptyElse
+# rubocop: disable Layout/LineLength
 def defensive_square(line, board)
   if board.values_at(*line).count(PLAYER_MARKER) == 2
-    board.select { |key, value| line.include?(key) && value == INITIAL_MARKER}.keys.first
+    board.select { |key, value| line.include?(key) && value == INITIAL_MARKER }.keys.first
   else
     nil
   end
@@ -106,12 +112,16 @@ end
 
 def offensive_square(line, board)
   if board.values_at(*line).count(COMPUTER_MARKER) == 2
-    board.select { |key, value| line.include?(key) && value == INITIAL_MARKER}.keys.first
+    board.select { |key, value| line.include?(key) && value == INITIAL_MARKER }.keys.first
   else
     nil
   end
 end
+# rubocop: enable Style/EmptyElse
+# rubocop: enable Layout/LineLength
 
+# rubocop: disable Metrics/CyclomaticComplexity
+# rubocop: disable Metrics/MethodLength
 def computer_places_piece!(brd)
   square = nil
   WINNING_LINES.each do |line|
@@ -126,8 +136,8 @@ def computer_places_piece!(brd)
     end
   end
 
-  if !square
-    square = 5 # check if empty first?
+  if !square && empty_squares(brd).include?(5)
+    square = 5
   end
 
   if !square
@@ -135,6 +145,8 @@ def computer_places_piece!(brd)
   end
   brd[square] = COMPUTER_MARKER
 end
+# rubocop: enable Metrics/CyclomaticComplexity
+# rubocop: enable Metrics/MethodLength
 
 def place_piece!(brd, plr)
   if plr == "Player"
@@ -161,7 +173,6 @@ def someone_won?(brd)
 end
 
 def detect_winner(brd)
-  # use code similar to below to detect if 2 out of 3 have been chosen (for defense)
   WINNING_LINES.each do |line|
     if brd.values_at(*line).count(PLAYER_MARKER) == 3
       return 'Player'
@@ -176,10 +187,10 @@ def five_wins?(plyr_scr, comp_scr)
   !!detect_five_wins(plyr_scr, comp_scr)
 end
 
-def detect_five_wins(plyr_scr, comp_scr) 
-  if plyr_scr >= 5
+def detect_five_wins(plyr_scr, comp_scr)
+  if plyr_scr >= GAMES_TO_WIN
     'Player'
-  elsif comp_scr >= 5
+  elsif comp_scr >= GAMES_TO_WIN
     'Computer'
   end
 end
@@ -187,7 +198,7 @@ end
 loop do
   board = initialize_board
   display_board(board)
-  
+
   first_mover = player_first_move? ? "Player" : "Computer"
 
   current_player = first_mover
@@ -197,15 +208,13 @@ loop do
     current_player = alternate_player(current_player)
     break if someone_won?(board) || board_full?(board)
   end
-  
 
   display_board(board)
-
 
   if someone_won?(board)
     if detect_winner(board) == 'Player'
       player_score += 1
-    else 
+    else
       computer_score += 1
     end
   else
